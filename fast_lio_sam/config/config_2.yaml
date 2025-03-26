@@ -1,5 +1,6 @@
 fast_lio_sam_node:
   ros__parameters:
+    use_sim_time: true
     basic:
       map_frame: "map"
       loop_update_hz: 2.0
