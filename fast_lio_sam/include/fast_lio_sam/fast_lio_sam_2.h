@@ -95,6 +95,8 @@ private:
     bool loop_added_flag_vis_ = false;
     bool global_map_vis_switch_ = true;
     bool save_map_bag_ = false, save_map_pcd_ = false, save_in_kitti_format_ = false, save_pose_yml_ = false;
+    std::string save_map_path_ = ROOT_DIR;
+
     int bkp_dt_;
     int pose_update_count_ = 0;
     int vis_count_ = 0;

@@ -66,7 +66,7 @@ FastLioSam::~FastLioSam()
             }
         }
         const auto &voxelized_map = voxelizePcd(corrected_map, voxel_res_);
-        pcl::io::savePCDFileASCII<PointType>(package_path_ + "/result.pcd", *voxelized_map);
+        pcl::io::savePCDFileASCII<PointType>(save_map_path_ + "map.pcd", *voxelized_map);
         RCLCPP_INFO(this->get_logger(), "\033[32;1mResult saved in .pcd format!!!\033[0m");
     }
 }
@@ -115,6 +115,7 @@ void FastLioSam::loadParams()
     
     this->get_parameter("result.save_voxel_resolution", voxel_res_);
     this->get_parameter("result.save_map_pcd", save_map_pcd_);
+    this->get_parameter("result.save_map_path", save_map_path_);
     this->get_parameter("result.save_map_bag", save_map_bag_);
     this->get_parameter("result.save_in_kitti_format", save_in_kitti_format_);
     this->get_parameter("result.seq_name", seq_name_);
@@ -607,7 +608,7 @@ void FastLioSam::saveFlagCallback(const std_msgs::msg::String::SharedPtr msg)
             }
         }
         const auto &voxelized_map = voxelizePcd(corrected_map, voxel_res_);
-        pcl::io::savePCDFileASCII<PointType>(seq_directory + "/" + seq_name_ + "_map.pcd", *voxelized_map);
+        pcl::io::savePCDFileASCII<PointType>(save_map_path_ + seq_name_ + "_map.pcd", *voxelized_map);
         RCLCPP_INFO(this->get_logger(), "\033[32;1mAccumulated map cloud saved in .pcd format\033[0m");
     }
 }

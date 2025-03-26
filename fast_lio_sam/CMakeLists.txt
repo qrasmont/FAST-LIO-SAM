@@ -7,6 +7,7 @@ set(CMAKE_CXX_FLAGS "-std=c++17 -pthread -fexceptions -g -ggdb") #c++17, for par
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra ${CMAKE_CXX_FLAGS}")
 
+add_definitions(-DROOT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
