@@ -1,5 +1,5 @@
-#!/usr/bin/env python3 
- 
+#!/usr/bin/env python3
+
 import os
 import yaml
 
@@ -27,8 +27,9 @@ def launch_setup(context, *args, **kwargs):
     config_path_value = config_path.perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     timer_duration = LaunchConfiguration('timer_duration', default=5)
-    rviz_use = LaunchConfiguration('rviz', default='false')    
-    
+    save_map_path = LaunchConfiguration('save_map_path', default='')
+    rviz_use = LaunchConfiguration('rviz', default='false')
+
     default_rviz_config_path = os.path.join(
         config_path_value, 'sam_rviz.rviz')
 
@@ -41,7 +42,8 @@ def launch_setup(context, *args, **kwargs):
     params = load_yaml_file(params_file)
 
     fast_lio_sam_params = params["fast_lio_sam_node"]["ros__parameters"]
-    
+    fast_lio_sam_params['result']['save_map_path'] = context.perform_substitution(save_map_path)
+
     fast_lio_sam_node = Node(
         package="fast_lio_sam",
         executable="fast_lio_sam_node",
@@ -49,7 +51,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[fast_lio_sam_params],
         output="screen"
     )
-    
+
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -61,15 +63,13 @@ def launch_setup(context, *args, **kwargs):
         period=timer_duration,  # Time in seconds
         actions=[fast_lio_sam_node]
     )
-    
+
     return[
-        timer_action, 
+        timer_action,
         rviz_node
     ]
 
 def generate_launch_description():
-    
-
     ld = LaunchDescription()
     ld.add_action(OpaqueFunction(function=launch_setup))
 

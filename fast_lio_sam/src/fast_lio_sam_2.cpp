@@ -67,7 +67,7 @@ FastLioSam::~FastLioSam()
         }
         const auto &voxelized_map = voxelizePcd(corrected_map, voxel_res_);
         pcl::io::savePCDFileASCII<PointType>(save_map_path_ + "map.pcd", *voxelized_map);
-        RCLCPP_INFO(this->get_logger(), "\033[32;1mResult saved in .pcd format!!!\033[0m");
+        RCLCPP_INFO(this->get_logger(), "\033[32;1mResult saved in .pcd format at %s !!!\033[0m", save_map_path_.c_str());
     }
 }
 
@@ -89,6 +89,7 @@ void FastLioSam::loadParams()
 
     this->declare_parameter("result.save_voxel_resolution", 0.3);
     this->declare_parameter("result.save_map_pcd", false);
+    this->declare_parameter("result.save_map_path", ROOT_DIR);
     this->declare_parameter("result.save_map_bag", false);
     this->declare_parameter("result.save_in_kitti_format", false);
     this->declare_parameter("result.seq_name", "");
