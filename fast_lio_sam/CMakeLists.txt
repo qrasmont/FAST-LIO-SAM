@@ -24,7 +24,7 @@ find_package(pcl_conversions REQUIRED)
 find_package(pcl_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
-find_package(GTSAM REQUIRED)
+find_package(GTSAM QUIET)
 
 
 if(PCL_FOUND)
