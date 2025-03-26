@@ -221,7 +221,7 @@ void FastLioSam::savePoseToYaml(const geometry_msgs::msg::PoseStamped::ConstShar
         // std::filesystem::path parent_path = current_path.parent_path();
 
         // // Enter the "config" directory
-        std::filesystem::path config_path = "/root/ros2_ws/install/fast_lio_sam/share/fast_lio_sam/config";
+        std::filesystem::path config_path = "/ros2_dep/install/fast_lio_sam/share/fast_lio_sam/config";
         
         // Ensure the directory exists
         if (!std::filesystem::exists(config_path)) {
