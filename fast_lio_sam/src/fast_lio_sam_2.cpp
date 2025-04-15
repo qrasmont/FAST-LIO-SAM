@@ -36,24 +36,25 @@ FastLioSam::FastLioSam() : Node("fast_lio_sam_node")
 
 FastLioSam::~FastLioSam()
 {
-    // // save map
-    // if (save_map_bag_)
-    // {
-    //     rosbag::Bag bag;
-    //     bag.open(package_path_ + "/result.bag", rosbag::bagmode::Write);
-    //     {
-    //         std::lock_guard<std::mutex> lock(keyframes_mutex_);
-    //         for (size_t i = 0; i < keyframes_.size(); ++i)
-    //         {
-    //             ros::Time time;
-    //             time.fromSec(keyframes_[i].timestamp_);
-    //             bag.write("/keyframe_pcd", time, pclToPclRos(keyframes_[i].pcd_, map_frame_));
-    //             bag.write("/keyframe_pose", time, poseEigToPoseStamped(keyframes_[i].pose_corrected_eig_));
-    //         }
-    //     }
-    //     bag.close();
-    //     ROS_INFO("\033[36;1mResult saved in .bag format!!!\033[0m");
-    // }
+    // save map
+    if (save_map_bag_)
+    {
+        rosbag::Bag bag;
+        bag.open(package_path_ + "/result.bag", rosbag::bagmode::Write);
+        {
+            std::lock_guard<std::mutex> lock(keyframes_mutex_);
+            for (size_t i = 0; i < keyframes_.size(); ++i)
+            {
+                ros::Time time;
+                time.fromSec(keyframes_[i].timestamp_);
+                /* bag.write("/keyframe_pcd", time, pclToPclRos(keyframes_[i].pcd_, map_frame_)); */
+                bag.write("/keyframe_pose", time, poseEigToPoseStamped(keyframes_[i].pose_corrected_eig_));
+            }
+        }
+        bag.close();
+        ROS_INFO("\033[36;1mResult saved in .bag format!!!\033[0m");
+    }
+
     if (save_map_pcd_)
     {
         pcl::PointCloud<PointType>::Ptr corrected_map(new pcl::PointCloud<PointType>());
