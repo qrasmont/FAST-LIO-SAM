@@ -34,25 +34,79 @@ FastLioSam::FastLioSam() : Node("fast_lio_sam_node")
     savePoseToYaml(std::make_shared<geometry_msgs::msg::PoseStamped>(fake_pose), yaml_file_name_bkp_);
 }
 
+void FastLioSam::saveMapToBag(const std::string& path,
+        const std::vector<PosePcd>& keyframes,
+        std::mutex& keyframes_mutex)
+{
+    // Set up storage options
+    rosbag2_storage::StorageOptions storage_options;
+    storage_options.uri = path + "pose_result";
+    storage_options.storage_id = "sqlite3";
+
+    const std::string topic_name = "/keyframe_pose";
+    const std::string topic_type = "geometry_msgs/msg/PoseStamped";
+    const std::string serialization_format = rmw_get_serialization_format();
+
+    // Create writer
+    auto writer = std::make_unique<rosbag2_cpp::Writer>();
+    writer->open(storage_options);
+
+    // Create topic
+    rosbag2_storage::TopicMetadata topic_metadata;
+    topic_metadata.name = topic_name;
+    topic_metadata.type = topic_type;
+    topic_metadata.serialization_format = serialization_format;
+    writer->create_topic(topic_metadata);
+
+    {
+        std::lock_guard<std::mutex> lock(keyframes_mutex);
+
+        // Write each keyframe to the bag
+        for (size_t i = 0; i < keyframes.size(); ++i)
+        {
+            // Convert timestamp
+            int64_t timestamp_ns = static_cast<int64_t>(keyframes[i].timestamp_ * 1e9);
+            rclcpp::Time time(timestamp_ns);
+
+            // Create message (not using shared_ptr)
+            geometry_msgs::msg::PoseStamped pose_msg = poseEigToPoseStamped(keyframes[i].pose_corrected_eig_, map_frame_);
+            pose_msg.header.stamp = time;
+
+
+            auto serialized_msg = rclcpp::SerializedMessage();
+
+            // Get type support
+            const rosidl_message_type_support_t* type_support = 
+                rosidl_typesupport_cpp::get_message_type_support_handle<geometry_msgs::msg::PoseStamped>();
+
+            // Serialize using rmw directly
+            rmw_ret_t ret = rmw_serialize(
+                    &pose_msg, 
+                    type_support,
+                    &serialized_msg.get_rcl_serialized_message());
+
+            if (ret != RMW_RET_OK) {
+                throw std::runtime_error("Failed to serialize message");
+            }
+
+            // Write to bag
+            writer->write(
+                    serialized_msg,
+                    topic_name,
+                    topic_type,
+                    rclcpp::Time(timestamp_ns));
+        }
+    }
+}
+
 FastLioSam::~FastLioSam()
 {
     // save map
     if (save_map_bag_)
     {
-        rosbag::Bag bag;
-        bag.open(package_path_ + "/result.bag", rosbag::bagmode::Write);
-        {
-            std::lock_guard<std::mutex> lock(keyframes_mutex_);
-            for (size_t i = 0; i < keyframes_.size(); ++i)
-            {
-                ros::Time time;
-                time.fromSec(keyframes_[i].timestamp_);
-                /* bag.write("/keyframe_pcd", time, pclToPclRos(keyframes_[i].pcd_, map_frame_)); */
-                bag.write("/keyframe_pose", time, poseEigToPoseStamped(keyframes_[i].pose_corrected_eig_));
-            }
-        }
-        bag.close();
-        ROS_INFO("\033[36;1mResult saved in .bag format!!!\033[0m");
+        RCLCPP_INFO(this->get_logger(), "Saving result to bag file...");
+        saveMapToBag(save_map_path_, keyframes_, keyframes_mutex_);
+        RCLCPP_INFO(this->get_logger(), "\033[36;1mResult saved in .bag format!!!\033[0m");
     }
 
     if (save_map_pcd_)

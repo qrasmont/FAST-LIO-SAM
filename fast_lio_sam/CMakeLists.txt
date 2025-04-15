@@ -26,6 +26,8 @@ find_package(pcl_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(GTSAM QUIET)
+find_package(rosbag2_cpp REQUIRED)
+find_package(rosbag2_storage REQUIRED)
 
 
 if(PCL_FOUND)
@@ -50,13 +52,16 @@ include_directories(
 
 set(dependencies
   rclcpp
+  rosbag2_cpp
+  rosbag2_storage
+
   geometry_msgs
   sensor_msgs
   nav_msgs
   visualization_msgs
-  
+
   message_filters
-  
+
   tf2
   tf2_eigen
   tf2_ros

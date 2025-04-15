@@ -25,6 +25,9 @@
   <depend>message_filters</depend>
   <depend>yaml-cpp</depend>
   <depend>gtsam</depend>
+  <depend>rosbag2_cpp</depend>
+  <depend>rosbag2_storage</depend>
+  <depend>rmw_implementation</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

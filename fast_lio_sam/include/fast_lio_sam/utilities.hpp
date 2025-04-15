@@ -163,3 +163,4 @@ inline pcl::PointCloud<pcl::PointXYZI>::Ptr voxelizePcd(const pcl::PointCloud<pc
     voxelgrid.filter(*pcd_out);
     return pcd_out;
 }
+

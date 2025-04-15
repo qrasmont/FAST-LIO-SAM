@@ -18,6 +18,11 @@
 #include <Eigen/Dense>
 
 #include <rclcpp/rclcpp.hpp>
+#include <rosbag2_cpp/writer.hpp>
+#include <rosbag2_cpp/writers/sequential_writer.hpp>
+#include <rosbag2_storage/storage_options.hpp>
+#include <rmw/rmw.h>
+#include <rosidl_typesupport_cpp/message_type_support.hpp>
 
 #include <fast_lio_sam/pose_pcd.hpp>
 #include <fast_lio_sam/utilities.hpp>
@@ -149,7 +154,7 @@ private:
     void odomPcdCallback(const nav_msgs::msg::Odometry::ConstSharedPtr &odom_msg, const sensor_msgs::msg::PointCloud2::ConstSharedPtr &pcd_msg);
     void saveFlagCallback(const std_msgs::msg::String::SharedPtr msg);
     void savePoseToYaml(const geometry_msgs::msg::PoseStamped::ConstSharedPtr &pose_msg, const std::string& filename);
-    
-    
-    
+    void saveMapToBag(const std::string& bag_path,
+        const std::vector<PosePcd>& keyframes,
+        std::mutex& keyframes_mutex);
 };
