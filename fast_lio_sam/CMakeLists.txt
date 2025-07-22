@@ -29,6 +29,11 @@ find_package(GTSAM QUIET)
 find_package(rosbag2_cpp REQUIRED)
 find_package(rosbag2_storage REQUIRED)
 
+find_package(livox_ros_driver2 REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(pcl_ros REQUIRED)
+find_package(fast_lio REQUIRED)
+
 
 if(PCL_FOUND)
   message(WARNING "PCL_VER: ${PCL_VERSION}, and PCL_DIR: ${PCL_INCLUDE_DIRS}")
@@ -72,6 +77,11 @@ set(dependencies
   GTSAM
   Eigen3
   yaml-cpp
+
+  livox_ros_driver2
+  pcl_ros
+  std_srvs
+  fast_lio
 )
 
 set(common_libraries
@@ -79,6 +89,7 @@ set(common_libraries
   ${EIGEN3_LIBS}
   yaml-cpp::yaml-cpp 
   gtsam
+  fast_lio::fast_lio_core
 )
 
 add_library(${PROJECT_NAME}_modules SHARED src/loop_closure.cpp src/fast_lio_sam_2.cpp)
