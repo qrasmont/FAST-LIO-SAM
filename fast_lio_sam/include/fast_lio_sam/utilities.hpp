@@ -1,4 +1,5 @@
 #pragma once
+#include <fast_lio/common_lib.h>
 ///// Common Headers
 #include <string>
 ///// ROS2
@@ -21,8 +22,6 @@
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/geometry/Point3.h>
 #include <gtsam/geometry/Pose3.h>
-
-using PointType = pcl::PointXYZI;
 
 //////////////////////////////////////////////////////////////////////
 ///// Conversions
@@ -142,23 +141,23 @@ inline pcl::PointCloud<T> transformPcd(const pcl::PointCloud<T> &cloud_in,
     return pcl_out;
 }
 
-inline pcl::PointCloud<pcl::PointXYZI>::Ptr voxelizePcd(const pcl::PointCloud<pcl::PointXYZI> &pcd_in,
-                                                        const float voxel_res)
+inline PointCloudXYZI::Ptr voxelizePcd(const PointCloudXYZI &pcd_in,
+                                       const float voxel_res)
 {
-    static pcl::VoxelGrid<pcl::PointXYZI> voxelgrid;
+    static pcl::VoxelGrid<PointType> voxelgrid;
     voxelgrid.setLeafSize(voxel_res, voxel_res, voxel_res);
-    auto pcd_out = std::make_shared<pcl::PointCloud<pcl::PointXYZI>>();
+    auto pcd_out = std::make_shared<PointCloudXYZI>();
     voxelgrid.setInputCloud(pcd_in.makeShared());
     voxelgrid.filter(*pcd_out);
     return pcd_out;
 }
 
-inline pcl::PointCloud<pcl::PointXYZI>::Ptr voxelizePcd(const pcl::PointCloud<pcl::PointXYZI>::Ptr &pcd_in,
-                                                        const float voxel_res)
+inline PointCloudXYZI::Ptr voxelizePcd(const PointCloudXYZI::Ptr &pcd_in,
+                                       const float voxel_res)
 {
-    static pcl::VoxelGrid<pcl::PointXYZI> voxelgrid;
+    static pcl::VoxelGrid<PointType> voxelgrid;
     voxelgrid.setLeafSize(voxel_res, voxel_res, voxel_res);
-    auto pcd_out = std::make_shared<pcl::PointCloud<pcl::PointXYZI>>();
+    auto pcd_out = std::make_shared<PointCloudXYZI>();
     voxelgrid.setInputCloud(pcd_in);
     voxelgrid.filter(*pcd_out);
     return pcd_out;

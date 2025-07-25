@@ -19,6 +19,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rosbag2_cpp/writer.hpp>
+#include <rosbag2_cpp/readers/sequential_reader.hpp>
 #include <rosbag2_cpp/writers/sequential_writer.hpp>
 #include <rosbag2_storage/storage_options.hpp>
 #include <rmw/rmw.h>
@@ -44,16 +45,20 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/point_stamped.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
+#include "sensor_msgs/msg/imu.hpp"
 #include "visualization_msgs/msg/marker.hpp"
+#include "rosgraph_msgs/msg/clock.hpp"
 
 #include "tf2_ros/transform_broadcaster.h"
+#include "tf2_ros/static_transform_broadcaster.h"
 
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/sync_policies/exact_time.h>
 #include <message_filters/synchronizer.h>
 
-
+// Headers from fast_lio
+#include <fast_lio/FastLioCore.h>
 
 typedef message_filters::sync_policies::ApproximateTime<nav_msgs::msg::Odometry, sensor_msgs::msg::PointCloud2> odom_pcd_sync_pol;
 
@@ -74,6 +79,10 @@ public:
     geometry_msgs::msg::TransformStamped getTransformStamped(const tf2::Transform &transform, const std::string &frame_id, const std::string &child_frame_id);
 
 private:
+    void runOffline();
+    void performLoopClosureForKf(size_t keyframe_idx);
+
+
     LoopClosureConfig lc_config_;
 
     std::string map_frame_;
@@ -81,12 +90,14 @@ private:
     std::string seq_name_;
     std::string yaml_file_name_;
     std::string yaml_file_name_bkp_;
+    std::string bag_file_;
+    std::string fast_lio_config_;
 
     std::mutex realtime_pose_mutex_, keyframes_mutex_, graph_mutex_, vis_mutex_;
 
     Eigen::Matrix4d last_corrected_pose_ = Eigen::Matrix4d::Identity();
     Eigen::Matrix4d odom_delta_ = Eigen::Matrix4d::Identity();
-    
+
     PosePcd current_frame_;
 
     std::vector<PosePcd> keyframes_;
@@ -99,6 +110,9 @@ private:
     bool loop_added_flag_ = false;
     bool loop_added_flag_vis_ = false;
     bool global_map_vis_switch_ = true;
+    bool offline_post_loop_optimization_ = true;
+    bool offline_buffered_read_ = true;
+    double bag_buffer_time_sec_ = 2.0;
     bool save_map_bag_ = false, save_map_pcd_ = false, save_in_kitti_format_ = false, save_pose_yml_ = false;
     std::string save_map_path_ = ROOT_DIR;
 
@@ -110,19 +124,21 @@ private:
     std::shared_ptr<gtsam::ISAM2> isam_handler_ = nullptr;
     std::shared_ptr<LoopClosure> loop_closure_ = nullptr;
 
+    std::unique_ptr<FastLioCore> fast_lio_core_;
+
     gtsam::NonlinearFactorGraph gtsam_graph_;
     gtsam::Values init_esti_;
     gtsam::Values corrected_esti_;
-    
+
     double keyframe_thr_;
     double voxel_res_;
     double loop_update_hz_;
     double vis_hz_;
-    
+
     pcl::PointCloud<pcl::PointXYZ> odoms_, corrected_odoms_;
-    
+
     nav_msgs::msg::Path odom_path_, corrected_path_;
-    
+
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr odom_pub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr corrected_odom_pub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr corrected_pcd_map_pub_;
@@ -134,16 +150,18 @@ private:
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr corrected_path_pub_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr loop_detection_pub_;
+    rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr clock_pub_;
 
     std::unique_ptr<message_filters::Subscriber<nav_msgs::msg::Odometry>> odom_sub_;
     std::unique_ptr<message_filters::Subscriber<sensor_msgs::msg::PointCloud2>> pcd_sub_;
     std::unique_ptr<message_filters::Synchronizer<odom_pcd_sync_pol>> sub_odom_pcd_sync_;
 
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::unique_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_;
 
     // not so important for now
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_save_flag_;
-    
+
     rclcpp::TimerBase::SharedPtr loop_timer_;
     rclcpp::TimerBase::SharedPtr vis_timer_;
 

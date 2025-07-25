@@ -29,6 +29,8 @@ def launch_setup(context, *args, **kwargs):
     timer_duration = LaunchConfiguration('timer_duration', default=5)
     save_map_path = LaunchConfiguration('save_map_path', default='')
     rviz_use = LaunchConfiguration('rviz', default='false')
+    bag_path = LaunchConfiguration('bag_path', default='')
+    buffered = LaunchConfiguration('buffered', default=True)
 
     default_rviz_config_path = os.path.join(
         config_path_value, 'sam_rviz.rviz')
@@ -48,7 +50,8 @@ def launch_setup(context, *args, **kwargs):
         package="fast_lio_sam",
         executable="fast_lio_sam_node",
         name="fast_lio_sam_node",
-        parameters=[fast_lio_sam_params],
+        parameters=[fast_lio_sam_params,
+                    {'offline': {'bag_file': bag_path, 'buffered_read': buffered}}],
         output="screen"
     )
 

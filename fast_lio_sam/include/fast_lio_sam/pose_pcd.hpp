@@ -4,7 +4,7 @@
 
 struct PosePcd
 {
-    pcl::PointCloud<pcl::PointXYZI> pcd_;
+    pcl::PointCloud<PointType> pcd_;
     Eigen::Matrix4d pose_eig_ = Eigen::Matrix4d::Identity();
     Eigen::Matrix4d pose_corrected_eig_ = Eigen::Matrix4d::Identity();
     double timestamp_;
@@ -38,7 +38,7 @@ inline PosePcd::PosePcd(const nav_msgs::msg::Odometry &odom_in,
     pose_eig_(1, 3) = odom_in.pose.pose.position.y;
     pose_eig_(2, 3) = odom_in.pose.pose.position.z;
     pose_corrected_eig_ = pose_eig_;
-    pcl::PointCloud<pcl::PointXYZI> tmp_pcd;
+    pcl::PointCloud<PointType> tmp_pcd;
     pcl::fromROSMsg(pcd_in, tmp_pcd);
     pcd_ = transformPcd(tmp_pcd, pose_eig_.inverse()); // FAST-LIO publish data in world frame,
                                                        // so save it in LiDAR frame

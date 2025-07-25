@@ -5,7 +5,7 @@ fast_lio_sam_node:
       map_frame: "map"
       loop_update_hz: 2.0
       vis_hz: 1.0
-    
+
     keyframe:
       keyframe_threshold: 1.5
       num_submap_keyframes: 5
@@ -17,7 +17,7 @@ fast_lio_sam_node:
     icp:
       icp_voxel_resolution: 0.3
       icp_score_threshold: 1.5
-    
+
     result:
       save_voxel_resolution: 0.3
       save_map_pcd: true
@@ -29,3 +29,10 @@ fast_lio_sam_node:
       yaml_file_name_bkp: "latest_lidar_pose_bkp.yaml"
       bkp_dt: 2 # Backup to be taken once in bkp_dt messages
       map_publish_freq: 10  # For every map_publish_freq calls to visTimercallback, map will be published once
+
+    offline:
+      bag_file: ""
+      fast_lio_config: "mid360.yaml"
+      post_loop_optimization: false
+      buffered_read: true
+      buffer_time_sec: 2.0

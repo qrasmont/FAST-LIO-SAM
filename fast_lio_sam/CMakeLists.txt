@@ -6,6 +6,7 @@ set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "-std=c++17 -pthread -fexceptions -g -ggdb") #c++17, for parallel programming and for Eigen (see https://eigen.tuxfamily.org/dox/group__TopicStructHavingEigenMembers.html)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra ${CMAKE_CXX_FLAGS}")
+add_compile_options(-Wno-error=array-bounds -Wno-array-bounds)
 
 add_definitions(-DROOT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
 
@@ -59,6 +60,7 @@ set(dependencies
   rclcpp
   rosbag2_cpp
   rosbag2_storage
+  ament_index_cpp
 
   geometry_msgs
   sensor_msgs
