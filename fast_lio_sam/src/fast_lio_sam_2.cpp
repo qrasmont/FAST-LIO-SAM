@@ -323,7 +323,7 @@ void FastLioSam::runOffline()
 
                     nav_msgs::msg::Path live_corrected_path;
                     live_corrected_path.header.frame_id = map_frame_;
-                    live_corrected_path.header.stamp = this->get_clock()->now();
+                    live_corrected_path.header.stamp = odom_msg.header.stamp;
                     std::lock_guard<std::mutex> lock(keyframes_mutex_);
                     for(const auto& kf : keyframes_) {
                         live_corrected_path.poses.push_back(
@@ -472,7 +472,7 @@ void FastLioSam::runOffline()
 
                 nav_msgs::msg::Path live_corrected_path;
                 live_corrected_path.header.frame_id = map_frame_;
-                live_corrected_path.header.stamp = this->get_clock()->now();
+                live_corrected_path.header.stamp = odom_msg.header.stamp;
                 std::lock_guard<std::mutex> lock(keyframes_mutex_);
                 for(const auto& kf : keyframes_) {
                     live_corrected_path.poses.push_back(
@@ -545,6 +545,12 @@ void FastLioSam::runOffline()
         nav_msgs::msg::Path final_path;
         final_path.header.frame_id = map_frame_;
         final_path.header.stamp = this->get_clock()->now();
+        if (!keyframes_.empty()) {
+            // Use the last keyframe's stamp for update
+            std::lock_guard<std::mutex> lock(keyframes_mutex_);
+            final_path.header.stamp = rclcpp::Time(static_cast<int64_t>(keyframes_.back().timestamp_ * 1e9));
+        }
+
         for (size_t i = 0; i < corrected_esti_.size(); ++i) {
             final_path.poses.push_back(
                 gtsamPoseToPoseStamped(corrected_esti_.at<gtsam::Pose3>(i), map_frame_)
@@ -754,12 +760,12 @@ void FastLioSam::initTimers()
     vis_timer_ = this->create_wall_timer(500ms, std::bind(&FastLioSam::visTimerCallback, this));
 }
 
-geometry_msgs::msg::TransformStamped FastLioSam::getTransformStamped(const tf2::Transform &transform, const std::string &frame_id, const std::string &child_frame_id)
+geometry_msgs::msg::TransformStamped FastLioSam::getTransformStamped(const tf2::Transform &transform, const rclcpp::Time &stamp, const std::string &frame_id, const std::string &child_frame_id)
 {
     geometry_msgs::msg::TransformStamped transform_stamped;
 
     // Populate the TransformStamped message
-    transform_stamped.header.stamp = this->get_clock()->now();
+    transform_stamped.header.stamp = stamp;
     transform_stamped.header.frame_id = frame_id;
     transform_stamped.child_frame_id = child_frame_id;
 
@@ -774,7 +780,6 @@ geometry_msgs::msg::TransformStamped FastLioSam::getTransformStamped(const tf2::
     transform_stamped.transform.rotation.w = quat.w();
 
     return transform_stamped;
-
 }
 
 void FastLioSam::savePoseToYaml(const geometry_msgs::msg::PoseStamped::ConstSharedPtr &pose_msg, const std::string& filename){
@@ -839,9 +844,9 @@ void FastLioSam::savePoseToYaml(const geometry_msgs::msg::PoseStamped::ConstShar
 }
 
 void FastLioSam::odomPcdCallback(const nav_msgs::msg::Odometry::ConstSharedPtr &odom_msg, const sensor_msgs::msg::PointCloud2::ConstSharedPtr &pcd_msg)
-{   
+{
     if ( DEBUG ) { RCLCPP_INFO(this->get_logger(), "odomcb 1"); }
-    
+
     Eigen::Matrix4d last_odom_tf;
     last_odom_tf = current_frame_.pose_eig_;
     current_frame_ = PosePcd(*odom_msg, *pcd_msg, current_keyframe_idx_);
@@ -865,7 +870,7 @@ void FastLioSam::odomPcdCallback(const nav_msgs::msg::Odometry::ConstSharedPtr &
         realtime_pose_pub_->publish(poseEigToPoseStamped(current_frame_.pose_corrected_eig_, map_frame_));
         // broadcaster
         transform = poseEigToROSTf2(current_frame_.pose_corrected_eig_);
-        transform_stamped = getTransformStamped(transform, map_frame_, "robot");
+        transform_stamped = getTransformStamped(transform, odom_msg->header.stamp, map_frame_, "robot");
         tf_broadcaster_->sendTransform(transform_stamped);
         if ( DEBUG ) { RCLCPP_INFO(this->get_logger(), "odom cb 3"); }
     }
@@ -1035,6 +1040,12 @@ void FastLioSam::visTimerCallback()
         // correct pose and path
         corrected_path.header.frame_id = map_frame_;
         corrected_path.header.stamp = this->get_clock()->now();
+        if (!keyframes_.empty()) {
+            // Use the last keyframe's stamp for update
+            std::lock_guard<std::mutex> lock(keyframes_mutex_);
+            corrected_path.header.stamp = rclcpp::Time(static_cast<int64_t>(keyframes_.back().timestamp_ * 1e9));
+        }
+
         for (size_t i = 0; i < corrected_esti_copied.size(); ++i)
         {
             gtsam::Pose3 pose_ = corrected_esti_copied.at<gtsam::Pose3>(i);

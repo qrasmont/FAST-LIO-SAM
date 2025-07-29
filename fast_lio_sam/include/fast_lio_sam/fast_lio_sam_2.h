@@ -76,7 +76,7 @@ public:
 
     void loopTimerCallback();
     void visTimerCallback();
-    geometry_msgs::msg::TransformStamped getTransformStamped(const tf2::Transform &transform, const std::string &frame_id, const std::string &child_frame_id);
+    geometry_msgs::msg::TransformStamped getTransformStamped(const tf2::Transform &transform, const rclcpp::Time &stamp, const std::string &frame_id, const std::string &child_frame_id);
 
 private:
     void runOffline();
