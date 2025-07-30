@@ -155,22 +155,7 @@ void FastLioSam::runOffline()
     }
     fast_lio_core_ = std::make_unique<FastLioCore>(config);
 
-    std::string storage_id;
-    try {
-        rcpputils::fs::path p(bag_file_);
-        if (rcpputils::fs::is_directory(p)) {
-            storage_id = "sqlite3";
-        } else if (p.extension().string() == ".mcap") {
-            storage_id = "mcap";
-        } else {
-            RCLCPP_WARN(this->get_logger(), "Cannot determine bag format from path: %s. Defaulting to 'sqlite3'.", bag_file_.c_str());
-            storage_id = "sqlite3";
-        }
-    } catch (const std::exception& e) {
-        RCLCPP_ERROR(this->get_logger(), "Filesystem error: %s. Defaulting to 'sqlite3'.", e.what());
-        storage_id = "sqlite3";
-    }
-    RCLCPP_INFO(this->get_logger(), "Using storage format: '%s'", storage_id.c_str());
+    std::string storage_id = "";
 
     rosbag2_storage::StorageOptions storage_options({bag_file_, storage_id});
     rosbag2_cpp::ConverterOptions converter_options;
