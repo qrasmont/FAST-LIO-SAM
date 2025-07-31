@@ -295,7 +295,7 @@ void FastLioSam::runOffline()
                     pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_world(new pcl::PointCloud<pcl::PointXYZI>());
                     pcl::transformPointCloud(result.cloud, *cloud_world, pose_world);
 
-                    pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud_to_publish(new pcl::PointCloud<pcl::PointXYZINormal>);
+                    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_to_publish(new pcl::PointCloud<pcl::PointXYZI>);
                     pcl::copyPointCloud(*cloud_world, *cloud_to_publish);
 
                     sensor_msgs::msg::PointCloud2 pcd_msg;
@@ -320,7 +320,7 @@ void FastLioSam::runOffline()
                     vis_count_++;
                     if (vis_count_ % map_publish_freq_ == 0 && !keyframes_.empty())
                     {
-                        PointCloudXYZI::Ptr corrected_map(new PointCloudXYZI());
+                        pcl::PointCloud<PointType>::Ptr corrected_map(new pcl::PointCloud<PointType>());
                         corrected_map->reserve(keyframes_[0].pcd_.size() * keyframes_.size());
                         {
                             for (size_t i = 0; i < keyframes_.size(); ++i)
@@ -444,7 +444,7 @@ void FastLioSam::runOffline()
                 pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_world(new pcl::PointCloud<pcl::PointXYZI>());
                 pcl::transformPointCloud(result.cloud, *cloud_world, pose_world);
 
-                pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud_to_publish(new pcl::PointCloud<pcl::PointXYZINormal>);
+                pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_to_publish(new pcl::PointCloud<pcl::PointXYZI>);
                 pcl::copyPointCloud(*cloud_world, *cloud_to_publish);
 
                 sensor_msgs::msg::PointCloud2 pcd_msg;
@@ -469,7 +469,7 @@ void FastLioSam::runOffline()
                 vis_count_++;
                 if (vis_count_ % map_publish_freq_ == 0 && !keyframes_.empty())
                 {
-                    PointCloudXYZI::Ptr corrected_map(new PointCloudXYZI());
+                    pcl::PointCloud<PointType>::Ptr corrected_map(new pcl::PointCloud<PointType>());
                     corrected_map->reserve(keyframes_[0].pcd_.size() * keyframes_.size());
                     {
                         for (size_t i = 0; i < keyframes_.size(); ++i)
@@ -1067,7 +1067,7 @@ void FastLioSam::visTimerCallback()
     //// 3. global map
     if (global_map_vis_switch_) // save time, only once in num_keyframes_per_map_publish keyframes
     {
-        PointCloudXYZI::Ptr corrected_map(new PointCloudXYZI());
+        pcl::PointCloud<PointType>::Ptr corrected_map(new pcl::PointCloud<PointType>());
         corrected_map->reserve(keyframes_[0].pcd_.size() * keyframes_.size()); // it's an approximated size
         {
             std::lock_guard<std::mutex> lock(keyframes_mutex_);
