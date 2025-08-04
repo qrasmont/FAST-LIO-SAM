@@ -317,21 +317,25 @@ void FastLioSam::runOffline()
                     }
                     corrected_path_pub_->publish(live_corrected_path);
 
-                    vis_count_++;
-                    if (vis_count_ % map_publish_freq_ == 0 && !keyframes_.empty())
-                    {
-                        pcl::PointCloud<PointType>::Ptr corrected_map(new pcl::PointCloud<PointType>());
-                        corrected_map->reserve(keyframes_[0].pcd_.size() * keyframes_.size());
-                        {
-                            for (size_t i = 0; i < keyframes_.size(); ++i)
-                            {
-                                *corrected_map += transformPcd(keyframes_[i].pcd_, keyframes_[i].pose_corrected_eig_);
-                            }
-                        }
-                        const auto &voxelized_map = voxelizePcd(corrected_map, voxel_res_);
-                        corrected_pcd_map_pub_->publish(pclToPclRos(*voxelized_map, map_frame_));
-                    }
 
+                    if (corrected_pcd_map_pub_->get_subscription_count() > 0 && !keyframes_.empty())
+                    {
+                        vis_count_++;
+                        if (vis_count_ % map_publish_freq_ == 0)
+                        {
+                            pcl::PointCloud<PointType>::Ptr corrected_map(new pcl::PointCloud<PointType>());
+                            corrected_map->reserve(keyframes_[0].pcd_.size() * keyframes_.size());
+                            {
+                                for (size_t i = 0; i < keyframes_.size(); ++i)
+                                {
+                                    *corrected_map += transformPcd(keyframes_[i].pcd_, keyframes_[i].pose_corrected_eig_);
+                                }
+                            }
+                            const auto &voxelized_map = voxelizePcd(corrected_map, voxel_res_);
+                            corrected_pcd_map_pub_->publish(pclToPclRos(*voxelized_map, map_frame_));
+                        }
+
+                    }
                     rate.sleep();
                 }
             }
@@ -466,19 +470,22 @@ void FastLioSam::runOffline()
                 }
                 corrected_path_pub_->publish(live_corrected_path);
 
-                vis_count_++;
-                if (vis_count_ % map_publish_freq_ == 0 && !keyframes_.empty())
+                if (corrected_pcd_map_pub_->get_subscription_count() > 0 && !keyframes_.empty())
                 {
-                    pcl::PointCloud<PointType>::Ptr corrected_map(new pcl::PointCloud<PointType>());
-                    corrected_map->reserve(keyframes_[0].pcd_.size() * keyframes_.size());
+                    vis_count_++;
+                    if (vis_count_ % map_publish_freq_ == 0)
                     {
-                        for (size_t i = 0; i < keyframes_.size(); ++i)
+                        pcl::PointCloud<PointType>::Ptr corrected_map(new pcl::PointCloud<PointType>());
+                        corrected_map->reserve(keyframes_[0].pcd_.size() * keyframes_.size());
                         {
-                            *corrected_map += transformPcd(keyframes_[i].pcd_, keyframes_[i].pose_corrected_eig_);
+                            for (size_t i = 0; i < keyframes_.size(); ++i)
+                            {
+                                *corrected_map += transformPcd(keyframes_[i].pcd_, keyframes_[i].pose_corrected_eig_);
+                            }
                         }
+                        const auto &voxelized_map = voxelizePcd(corrected_map, voxel_res_);
+                        corrected_pcd_map_pub_->publish(pclToPclRos(*voxelized_map, map_frame_));
                     }
-                    const auto &voxelized_map = voxelizePcd(corrected_map, voxel_res_);
-                    corrected_pcd_map_pub_->publish(pclToPclRos(*voxelized_map, map_frame_));
                 }
 
                 rate.sleep();
