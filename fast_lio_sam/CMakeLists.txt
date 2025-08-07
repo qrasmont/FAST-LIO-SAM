@@ -29,6 +29,7 @@ find_package(yaml-cpp REQUIRED)
 find_package(GTSAM QUIET)
 find_package(rosbag2_cpp REQUIRED)
 find_package(rosbag2_storage REQUIRED)
+find_package(rosidl_default_runtime REQUIRED)
 
 find_package(livox_ros_driver2 REQUIRED)
 find_package(std_srvs REQUIRED)

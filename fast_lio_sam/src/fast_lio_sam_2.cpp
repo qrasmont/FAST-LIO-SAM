@@ -559,63 +559,63 @@ void FastLioSam::saveMapToBag(const std::string& path,
         const std::vector<PosePcd>& keyframes,
         std::mutex& keyframes_mutex)
 {
-    // Set up storage options
     rosbag2_storage::StorageOptions storage_options;
-    storage_options.uri = path + "pose_result";
+    storage_options.uri = path + "map_bag";
     storage_options.storage_id = "sqlite3";
 
-    const std::string topic_name = "/keyframe_pose";
-    const std::string topic_type = "geometry_msgs/msg/PoseStamped";
-    const std::string serialization_format = rmw_get_serialization_format();
-
-    // Create writer
     auto writer = std::make_unique<rosbag2_cpp::Writer>();
-    writer->open(storage_options);
+    try {
+        writer->open(storage_options);
+    } catch (const std::exception& e) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to open bag file for writing: %s", e.what());
+        return;
+    }
 
-    // Create topic
-    rosbag2_storage::TopicMetadata topic_metadata;
-    topic_metadata.name = topic_name;
-    topic_metadata.type = topic_type;
-    topic_metadata.serialization_format = serialization_format;
-    writer->create_topic(topic_metadata);
+    const std::string pose_topic_name = "/keyframe_pose";
+    rosbag2_storage::TopicMetadata pose_topic_metadata;
+    pose_topic_metadata.name = pose_topic_name;
+    pose_topic_metadata.type = "geometry_msgs/msg/PoseStamped";
+    pose_topic_metadata.serialization_format = rmw_get_serialization_format();
+    writer->create_topic(pose_topic_metadata);
+
+
+    const std::string pcd_topic_name = "/keyframe_pcd";
+    rosbag2_storage::TopicMetadata pcd_topic_metadata;
+    pcd_topic_metadata.name = pcd_topic_name;
+    pcd_topic_metadata.type = "sensor_msgs/msg/PointCloud2";
+    pcd_topic_metadata.serialization_format = rmw_get_serialization_format();
+    writer->create_topic(pcd_topic_metadata);
+
 
     {
         std::lock_guard<std::mutex> lock(keyframes_mutex);
 
-        // Write each keyframe to the bag
-        for (size_t i = 0; i < keyframes.size(); ++i)
+        for (const auto& keyframe : keyframes)
         {
             // Convert timestamp
-            int64_t timestamp_ns = static_cast<int64_t>(keyframes[i].timestamp_ * 1e9);
-            rclcpp::Time time(timestamp_ns);
+            rclcpp::Time time(static_cast<int64_t>(keyframe.timestamp_ * 1e9));
 
-            // Create message (not using shared_ptr)
-            geometry_msgs::msg::PoseStamped pose_msg = poseEigToPoseStamped(keyframes[i].pose_corrected_eig_, map_frame_);
-            pose_msg.header.stamp = time;
-
-
-            auto serialized_msg = rclcpp::SerializedMessage();
-
-            // Get type support
-            const rosidl_message_type_support_t* type_support = 
-                rosidl_typesupport_cpp::get_message_type_support_handle<geometry_msgs::msg::PoseStamped>();
-
-            // Serialize using rmw directly
-            rmw_ret_t ret = rmw_serialize(
-                    &pose_msg, 
-                    type_support,
-                    &serialized_msg.get_rcl_serialized_message());
-
-            if (ret != RMW_RET_OK) {
-                throw std::runtime_error("Failed to serialize message");
+            // Write pose message
+            auto pose_msg = std::make_shared<geometry_msgs::msg::PoseStamped>(
+                poseEigToPoseStamped(keyframe.pose_corrected_eig_, map_frame_)
+            );
+            pose_msg->header.stamp = time;
+            try {
+                writer->write(*pose_msg, pose_topic_name, time);
+            } catch (const std::exception& e) {
+                 RCLCPP_ERROR(this->get_logger(), "Failed to write pose message to bag: %s", e.what());
             }
 
-            // Write to bag
-            writer->write(
-                    serialized_msg,
-                    topic_name,
-                    topic_type,
-                    rclcpp::Time(timestamp_ns));
+            // Write PCD message
+            auto pcd_msg = std::make_shared<sensor_msgs::msg::PointCloud2>(
+                pclToPclRos(keyframe.pcd_, map_frame_)
+            );
+            pcd_msg->header.stamp = time;
+             try {
+                writer->write(*pcd_msg, pcd_topic_name, time);
+            } catch (const std::exception& e) {
+                 RCLCPP_ERROR(this->get_logger(), "Failed to write pcd message to bag: %s", e.what());
+            }
         }
     }
 }
