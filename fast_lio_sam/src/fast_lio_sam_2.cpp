@@ -651,6 +651,7 @@ FastLioSam::~FastLioSam()
 void FastLioSam::loadParams()
 {
     this->declare_parameter("basic.map_frame", "map");
+    this->declare_parameter("basic.robot_frame", "robot");
     this->declare_parameter("basic.loop_update_hz", 1.0);
     this->declare_parameter("basic.vis_hz", 0.5);
 
@@ -682,6 +683,7 @@ void FastLioSam::loadParams()
 
 
     this->get_parameter("basic.map_frame", map_frame_);
+    this->get_parameter("basic.robot_frame", robot_frame_);
     this->get_parameter("basic.loop_update_hz", loop_update_hz_);
     this->get_parameter("basic.vis_hz", vis_hz_);
 
@@ -862,7 +864,7 @@ void FastLioSam::odomPcdCallback(const nav_msgs::msg::Odometry::ConstSharedPtr &
         realtime_pose_pub_->publish(poseEigToPoseStamped(current_frame_.pose_corrected_eig_, map_frame_));
         // broadcaster
         transform = poseEigToROSTf2(current_frame_.pose_corrected_eig_);
-        transform_stamped = getTransformStamped(transform, odom_msg->header.stamp, map_frame_, "robot");
+        transform_stamped = getTransformStamped(transform, odom_msg->header.stamp, map_frame_, robot_frame_);
         tf_broadcaster_->sendTransform(transform_stamped);
         if ( DEBUG ) { RCLCPP_INFO(this->get_logger(), "odom cb 3"); }
     }

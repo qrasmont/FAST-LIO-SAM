@@ -3,6 +3,7 @@ fast_lio_sam_node:
     use_sim_time: true
     basic:
       map_frame: "map"
+      robot_frame: "robot"
       loop_update_hz: 2.0
       vis_hz: 1.0
 

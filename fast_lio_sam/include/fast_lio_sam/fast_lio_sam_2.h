@@ -86,6 +86,7 @@ private:
     LoopClosureConfig lc_config_;
 
     std::string map_frame_;
+    std::string robot_frame_;
     std::string package_path_;
     std::string seq_name_;
     std::string yaml_file_name_;
