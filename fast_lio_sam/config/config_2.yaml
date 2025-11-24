@@ -8,7 +8,7 @@ fast_lio_sam_node:
       vis_hz: 1.0
 
     keyframe:
-      keyframe_threshold: 1.5
+      keyframe_threshold: 3.0
       num_submap_keyframes: 5
 
     loop:
@@ -16,8 +16,8 @@ fast_lio_sam_node:
       loop_detection_timmediff_threshold: 30.0
 
     icp:
-      icp_voxel_resolution: 0.3
-      icp_score_threshold: 1.5
+      icp_voxel_resolution: 0.1
+      icp_score_threshold: 1.0
 
     result:
       save_voxel_resolution: 0.3
