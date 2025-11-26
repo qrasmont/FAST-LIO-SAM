@@ -10,7 +10,10 @@ int main(int argc, char **argv)
 
     // Create a MultiThreadedExecutor for multithreaded spinning
     rclcpp::executors::MultiThreadedExecutor executor;
-    executor.add_node(node);
+    executor.add_node(node->get_node_base_interface());
+
+    node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+    node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
 
     // Spin the node until shutdown
     executor.spin();

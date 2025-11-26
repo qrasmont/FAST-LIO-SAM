@@ -18,6 +18,8 @@
 #include <Eigen/Dense>
 
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_lifecycle/lifecycle_node.hpp>
+#include <lifecycle_msgs/msg/transition.hpp>
 #include <rosbag2_cpp/writer.hpp>
 #include <rosbag2_cpp/readers/sequential_reader.hpp>
 #include <rosbag2_cpp/writers/sequential_writer.hpp>
@@ -63,11 +65,17 @@
 typedef message_filters::sync_policies::ApproximateTime<nav_msgs::msg::Odometry, sensor_msgs::msg::PointCloud2> odom_pcd_sync_pol;
 
 
-class FastLioSam : public rclcpp::Node
+class FastLioSam : public rclcpp_lifecycle::LifecycleNode
 {
 public:
     FastLioSam();
     ~FastLioSam();
+
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(const rclcpp_lifecycle::State& state) override;
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(const rclcpp_lifecycle::State& state) override;
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State& state) override;
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& state) override;
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State& state) override;
 
     void loadParams();
     void initPublishers();
@@ -153,8 +161,8 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr loop_detection_pub_;
     rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr clock_pub_;
 
-    std::unique_ptr<message_filters::Subscriber<nav_msgs::msg::Odometry>> odom_sub_;
-    std::unique_ptr<message_filters::Subscriber<sensor_msgs::msg::PointCloud2>> pcd_sub_;
+    std::unique_ptr<message_filters::Subscriber<nav_msgs::msg::Odometry, rclcpp_lifecycle::LifecycleNode>> odom_sub_;
+    std::unique_ptr<message_filters::Subscriber<sensor_msgs::msg::PointCloud2, rclcpp_lifecycle::LifecycleNode>> pcd_sub_;
     std::unique_ptr<message_filters::Synchronizer<odom_pcd_sync_pol>> sub_odom_pcd_sync_;
 
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
