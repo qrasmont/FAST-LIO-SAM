@@ -115,6 +115,7 @@ LifecycleNodeInterface::CallbackReturn FastLioSam::on_configure(const rclcpp_lif
 
         YAML::Node params = config_yaml.begin()->second["ros__parameters"];
         try {
+            config.feature_extract_enable = params["feature_extract_enable"].as<bool>();
             config.point_filter_num = params["point_filter_num"].as<int>();
             config.max_iteration = params["max_iteration"].as<int>();
             config.filter_size_surf = params["filter_size_surf"].as<double>();
@@ -143,7 +144,7 @@ LifecycleNodeInterface::CallbackReturn FastLioSam::on_configure(const rclcpp_lif
             config.pcd_save_en = false;
             config.log_path = "/tmp/";
             config.dense_publish_en = false;
-            config.map_pub_en = true;
+            config.map_pub_en = false;
         } catch (const YAML::Exception &e) {
             RCLCPP_ERROR(this->get_logger(), "Error while parsing YAML file: %s", e.what());
             return LifecycleNodeInterface::CallbackReturn::FAILURE;
